@@ -1,6 +1,6 @@
-# React Project Server
+# Borrow Hub
 
-This is a Node.js server built with Express for a React project. It includes endpoints for managing books, equipments, users, and borrow requests.
+This is a minimal REST API built with Node.js and Express for a React project. It includes endpoints for managing equipments and borrow requests.
 
 ## Prerequisites
 
@@ -12,13 +12,13 @@ This is a Node.js server built with Express for a React project. It includes end
 1. Clone the repository:
 
     ```sh
-    git clone https://github.com/your-username/react-project-server.git
+    git clone https://github.com/miri831/BorrowHub.git
     ```
 
 2. Navigate to the project directory:
 
     ```sh
-    cd react-project-server
+    cd BorrowHub
     ```
 
 3. Install the dependencies:
@@ -29,43 +29,94 @@ This is a Node.js server built with Express for a React project. It includes end
 
 ## Running the Server
 
-1. Compile the TypeScript code:
-
     ```sh
-    npx tsc
-    ```
-
-2. Start the server:
-
-    ```sh
-    node dist/index.js
+    npm start
     ```
 
 The server will be running on `http://localhost:3000`.
 
-## File Structure
-
-### [index.ts](http://_vscodecontentref_/1)
-
-- **Description**: Main entry point for the server.
-- **Dependencies**: Express, body-parser, cors.
-- **Port**: 3000
-
 ### Data Structures
 
-- **Equipment**: Represents an equipment with [id], [status], [category], and [name].
-- **User**: Represents a user with [id], `username`, `password`, `email` and `phone`.
-- **Borrow**: Represents a borrow request with `userId`, `equipmentId`, `startDate`, and `endDate`.
+- **Equipment**:
+
+    ```typescript
+    interface Equipment {
+        id: number;
+        status: string;
+        category: string;
+        name: string;
+    }
+    ```
+
+    Example:
+
+    ```typescript
+    const equipment = {      
+        id: 254,
+        name: 'Dell Monitor',
+        status: 'available', // 'available' || 'borrowed'
+        category: 'monitor',
+    }
+    ```
+
+- **User**:
+
+    ```typescript
+    interface User {
+        id: number;
+        username: string;
+        password: string;
+        phone?: string;
+        email?: string;
+    }
+    ```
+
+    Example:
+
+    ```typescript
+    const user = {
+        id: 89,
+        username: 'joe',
+        password: '1209jjjjd3',
+        phone: '034544990',
+        email: 'joe@example.com'
+    }
+    ```
+
+- **Borrow**:
+
+    ```typescript
+    interface Borrow {
+        id: number;
+        userId: number;
+        equipmentId: number;
+        startDate: Date;
+        endDate: Date;
+        status: 'borrowed' | 'available';
+    }
+    ```
+
+    Example:
+
+    ```typescript
+    const borrow1 = {
+        id: 1209,
+        userId: 89,
+        equipmentId: 254,
+        startDate: new Date('2025-02-05'),
+        endDate: new Date('2025-02-25'),
+        status: 'available',
+    }
+    ```
 
 ### Endpoints
-
 
 #### POST /auth/register
 
 - **Description**: Registers a new user.
 - **URL**: `/auth/register`
 - **Method**: `POST`
-- **Request Body**: JSON object with `username`, `password`, `phone` and `email` properties.
+- **Request Body**: JSON object with `username`, `password`, `phone`, and `email` properties.
 - **Response**: User object if registration is successful, otherwise an error message.
 
 #### POST /auth/login
@@ -82,6 +133,7 @@ The server will be running on `http://localhost:3000`.
 - **URL**: `/admin/equipments`
 - **Method**: `POST`
 - **Request Body**: JSON object representing the new equipment.
+- **Headers**: Must include a "user" header in the request.
 - **Response**: The newly added equipment.
 
 #### GET /equipments
@@ -110,17 +162,18 @@ The server will be running on `http://localhost:3000`.
 #### DELETE /admin/equipments/:id
 
 - **Description**: Deletes an equipment by ID. This method is used by admin user.
-- **URL**: `admin/equipments/:id`
+- **URL**: `/admin/equipments/:id`
 - **Method**: `DELETE`
 - **Headers**: Must include a "user" header in the request.
-- **Response**: Success message if the equipment is     deleted, otherwise an error message.
+- **Response**: Success message if the equipment is deleted, otherwise an error message.
 
 #### POST /borrow
 
-- **Description**: Processes a borrow request. 
+- **Description**: Processes a borrow request.
 - **URL**: `/borrow`
 - **Method**: `POST`
 - **Request Body**: JSON object with `userId`, `equipmentId`, `startDate`, and `endDate` properties.
+- **Headers**: Must include a "user" header in the request. The "user" header should contain the user ID.
 - **Response**: Success message if the borrow request is processed, otherwise an error message.
 
 #### GET /admin/borrows
@@ -128,15 +181,16 @@ The server will be running on `http://localhost:3000`.
 - **Description**: Retrieves a list of all borrow requests of all users. This method is used by admin user only.
 - **URL**: `/admin/borrows`
 - **Method**: `GET`
-- **Response**: Array of borrow request objects.
-
+- **Headers**: Must include a "user" header in the request. The "user" header should contain the string `admin`.
+- **Response**: Array of borrow  objectsrequest.
 
 #### PUT /admin/borrows/:id
 
 - **Description**: Updates an existing borrow request by ID. This method is used by admin user only.
 - **URL**: `/admin/borrows/:id`
 - **Method**: `PUT`
-- **Request Body**: JSON object representing the update  request, the fields should be updated: `endDdate` and `status`.
+- **Request Body**: JSON object representing the update request, the fields should be updated: `endDate` and `status`.
+- **Headers**: Must include a "user" header in the request. The "user" header should contain the string `admin`.
 - **Response**: The updated borrow request object if successful, otherwise an error message.
 
 #### POST /borrow/:borrowId/return
@@ -144,8 +198,82 @@ The server will be running on `http://localhost:3000`.
 - **Description**: Processes the return of a borrowed equipment. This method is used by a logged in user.
 - **URL**: `/borrow/:borrowId/return`
 - **Method**: `POST`
-- **Request Body**: JSON object with `returnDate` property.
+- **Headers**: Must include a "user" header in the request. The "user" header should contain the user ID.
 - **Response**: Success message if the return is processed, otherwise an error message.
+
+
+#### POST /borrow
+
+- **Description**: Processes a borrow request.
+- **URL**: `/borrow`
+- **Method**: `POST`
+- **Request Body**: JSON object with [equipmentId], [startDate], and [endDate] properties.
+- **Headers**: Must include a "user" header in the request. The "user" header should contain the user ID.
+- **Response**: Success message if the borrow request is processed, otherwise an error message.
+
+#### PUT /borrow/:borrowId/return
+
+- **Description**: Processes the return of a borrowed equipment. This method is used by a logged in user.
+- **URL**: `/borrow/:borrowId/return`
+- **Method**: `PUT`
+- **Headers**: Must include a "user" header in the request. The "user" header should contain the user ID.
+- **Response**: Success message if the return is processed, otherwise an error message.
+
+#### PUT /admin/borrow/:borrowId/return
+
+- **Description**: Processes the return of a borrowed equipment by an admin.
+- **URL**: `/admin/borrow/:borrowId/return`
+- **Method**: `PUT`
+- **Headers**: Must include a "user" header in the request. The "user" header should contain the string `admin`.
+- **Response**: Success message if the return is processed, otherwise an error message.
+
+#### GET /borrows/me
+
+- **Description**: Retrieves a list of borrow requests made by the logged-in user.
+- **URL**: `/borrows/me`
+- **Method**: `GET`
+- **Headers**: Must include a "user" header in the request. The "user" header should contain the user ID.
+- **Response**: Array of borrow request objects.
+
+#### GET /admin/borrows
+
+- **Description**: Retrieves a list of all borrow requests. This method is used by admin user only.
+- **URL**: `/admin/borrows`
+- **Method**: `GET`
+- **Headers**: Must include a "user" header in the request. The "user" header should contain the string `admin`.
+- **Response**: Array of borrow request objects.
+
+#### GET /admin/borrows/overdue
+
+- **Description**: Retrieves a list of overdue borrow requests. This method is used by admin user only.
+- **URL**: `/admin/borrows/overdue`
+- **Method**: `GET`
+- **Headers**: Must include a "user" header in the request. The "user" header should contain the string `admin`.
+- **Response**: Array of overdue borrow request objects.
+
+#### PUT /admin/borrow/:id
+
+- **Description**: Updates an existing borrow request by ID. This method is used by admin user only.
+- **URL**: `/admin/borrow/:id`
+- **Method**: `PUT`
+- **Request Body**: JSON object representing the updated borrow request.
+- **Headers**: Must include a "user" header in the request. The "user" header should contain the string `admin`.
+- **Response**: The updated borrow request object if successful, otherwise an error message.
+
+#### GET /categories
+
+- **Description**: Retrieves a list of all equipment categories.
+- **URL**: `/categories`
+- **Method**: `GET`
+- **Response**: Array of category strings.
+
+#### GET /admin/users
+
+- **Description**: Retrieves a list of all users. This method is used by admin user only.
+- **URL**: '/admin/users'
+- **Method**: `GET`
+- **Headers**: Must include a "user" header in the request. The "user" header should contain the string `admin`.
+- **Response**: Array of user objects.
 
 
 ## License

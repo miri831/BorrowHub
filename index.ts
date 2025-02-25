@@ -16,8 +16,6 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Hello node!');
 });
 
-
-
 interface Equipment {
     id: number;
     status: string;
@@ -29,7 +27,6 @@ interface User {
     id: number;
     username: string;
     password: string;
-    isAdmin?: boolean;
     phone?: string;
     email?: string;
 }
@@ -90,7 +87,7 @@ let equipments: Equipment[] = [{
     category: 'chair',
 }]
 let users: User[] = [
-    { id: 1, username: 'admin', password: '1234567', isAdmin: true }]
+    { id: 1, username: 'admin', password: '1234567'}]
 
 let borrows: Borrow[] = []
 
@@ -209,20 +206,34 @@ app.post('/borrow', isLoggedIn, (req: Request, res: Response): void => {
 });
 app.put('/borrow/:borrowId/return', isLoggedIn, (req: Request, res: Response) => {
     const borrowId = parseInt(req.params.borrowId);
-    const borrow = borrows.find(b => b.id === borrowId);
+    const index = borrows.findIndex(b => b.id === borrowId);
 
-    if (!borrow) {
+    if (index === -1) {
         res.status(404).send('Borrow record not found');
         return;
     }
 
     const userId = req.user?.id;
-    if (borrow.userId !== userId) {
+    if (borrows[index].userId !== userId) {
         res.status(403).send('You are not allowed to return this equipment');
         return;
     }
 
-    borrow.status = 'available';
+    borrows[index].status = 'available';
+
+    res.status(200).send({ message: 'Equipment returned successfully' });
+});
+
+app.put('/admin/borrow/:borrowId/return', isAdmin, (req: Request, res: Response) => {
+    const borrowId = parseInt(req.params.borrowId);
+    const index = borrows.findIndex(b => b.id === borrowId);
+
+    if (index === -1) {
+        res.status(404).send('Borrow record not found');
+        return;
+    }
+
+    borrows[index].status = 'available';
     res.status(200).send({ message: 'Equipment returned successfully' });
 });
 
@@ -238,7 +249,7 @@ app.get('/admin/borrows', isAdmin, (req: Request, res: Response) => {
     res.status(200).send(borrows);
 });
 
-app.get('/borrows/overdue', isAdmin, (req: Request, res: Response) => {
+app.get('/admin/borrows/overdue', isAdmin, (req: Request, res: Response) => {
     const currentDate = new Date();
     const overdueBorrows = borrows.filter(borrow => borrow.endDate < currentDate && borrow.status === 'borrowed');
     res.status(200).send(overdueBorrows);
@@ -264,7 +275,7 @@ app.get('/categories', (req: Request, res: Response) => {
     res.send(categories);
 });
 
-app.get('/users', isAdmin, (req: Request, res: Response) => {
+app.get('/admin/users', isAdmin, (req: Request, res: Response) => {
     res.send(users);
 }); 
 
