@@ -42,9 +42,11 @@ The server will be running on `http://localhost:3000`.
     ```typescript
     interface Equipment {
         id: number;
-        status: string;
+        status: 'available' | 'borrowed';
         category: string;
         name: string;
+        imgUri?: string;
+        description?: string;
     }
     ```
 
@@ -54,7 +56,7 @@ The server will be running on `http://localhost:3000`.
     const equipment = {      
         id: 254,
         name: 'Dell Monitor',
-        status: 'available', // 'available' || 'borrowed'
+        status: 'available', 
         category: 'monitor',
     }
     ```
@@ -92,7 +94,7 @@ The server will be running on `http://localhost:3000`.
         equipmentId: number;
         startDate: Date;
         endDate: Date;
-        status: 'borrowed' | 'available';
+        status: 'available' | 'borrowed' | 'completed' | 'rejected';
     }
     ```
 

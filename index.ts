@@ -18,9 +18,11 @@ app.get('/', (req: Request, res: Response) => {
 
 interface Equipment {
     id: number;
-    status: string;
+    status: 'available' | 'borrowed';
     category: string;
     name: string;
+    imgUri?: string;
+    description?: string;
 }
 
 interface User {
@@ -37,7 +39,7 @@ interface Borrow {
     equipmentId: number;
     startDate: Date;
     endDate: Date;
-    status: 'borrowed' | 'available';
+    status: 'borrowed' | 'available' | 'completed' | 'rejected';
 }
 
 declare module 'express-serve-static-core' {
@@ -200,8 +202,11 @@ app.post('/borrow', isLoggedIn, (req: Request, res: Response): void => {
         endDate,
         status: 'borrowed'
     };
-
+    
     borrows.push(newBorrow);
+
+    equipment.status = 'borrowed';
+
     res.status(201).send(newBorrow);
 });
 app.put('/borrow/:borrowId/return', isLoggedIn, (req: Request, res: Response) => {
@@ -219,7 +224,11 @@ app.put('/borrow/:borrowId/return', isLoggedIn, (req: Request, res: Response) =>
         return;
     }
 
-    borrows[index].status = 'available';
+    borrows[index].status = 'completed';
+    const equipment = equipments.find(e => e.id === borrows[index].equipmentId);
+    if (equipment) {
+        equipment.status = 'available';
+    }
 
     res.status(200).send({ message: 'Equipment returned successfully' });
 });
@@ -233,7 +242,11 @@ app.put('/admin/borrow/:borrowId/return', isAdmin, (req: Request, res: Response)
         return;
     }
 
-    borrows[index].status = 'available';
+    borrows[index].status = 'completed';
+    const equipment = equipments.find(e => e.id === borrows[index].equipmentId);
+    if (equipment) {
+        equipment.status = 'available';
+    }
     res.status(200).send({ message: 'Equipment returned successfully' });
 });
 
@@ -246,7 +259,7 @@ app.get('/borrows/me', isLoggedIn, (req: Request, res: Response) => {
 });
 
 app.get('/admin/borrows', isAdmin, (req: Request, res: Response) => {
-    res.status(200).send(borrows);
+    res.status(200).send(borrows.find(borrow => borrow.status === 'borrowed'));
 });
 
 app.get('/admin/borrows/overdue', isAdmin, (req: Request, res: Response) => {
@@ -263,6 +276,12 @@ app.put('/admin/borrow/:id', isAdmin, (req: Request, res: Response) => {
     if (borrow) {
         borrow.endDate = updatedBorrow.endDate;
         borrow.status = updatedBorrow.status;
+        if (updatedBorrow.status === 'completed' || updatedBorrow.status === 'rejected') {
+            const equipment = equipments.find(e => e.id === borrow.equipmentId);
+            if (equipment) {
+                equipment.status = 'available';
+            }
+        }
         res.status(200).send(borrow);
     } else {
         res.status(404).send('Borrow record not found');
