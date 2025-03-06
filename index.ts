@@ -31,6 +31,7 @@ interface User {
     password: string;
     phone?: string;
     email?: string;
+    isAdmin?: boolean;
 }
 
 interface Borrow {
@@ -51,7 +52,7 @@ declare module 'express-serve-static-core' {
 const isAdmin = (req: Request, res: Response, next: Function) => {
     const user = req.header('user');
     if (user === 'admin') {
-        req.user = users.find(u => u.username === 'admin');
+        req.user = users.find(u => u.isAdmin === true && u.username === 'admin');
         next();
     } else {
         res.status(403).send('Forbidden');
@@ -72,24 +73,9 @@ const isLoggedIn = (req: Request, res: Response, next: Function) => {
 };
 
 
-let equipments: Equipment[] = [{
-    id: 1,
-    status: 'available',
-    category: 'laptop',
-    name: 'Macbook Pro'
-},
-{   name: 'Dell Monitor',
-    id: 2,
-    status: 'available',
-    category: 'monitor',
-},{
-    name:'blue chair',
-    id: 3,
-    status: 'available',
-    category: 'chair',
-}]
+let equipments: Equipment[] = []
 let users: User[] = [
-    { id: 1, username: 'admin', password: '1234567'}]
+    { id: 1, username: 'admin', password: '1234567', isAdmin: true}]
 
 let borrows: Borrow[] = []
 
