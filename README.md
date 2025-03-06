@@ -71,6 +71,7 @@ The server will be running on `http://localhost:3000`.
         password: string;
         phone?: string;
         email?: string;
+        isAdmin?: boolean;
     }
     ```
 
