@@ -32,7 +32,7 @@ This is a minimal REST API built with Node.js and Express for a React project. I
     ```sh
     npm start
     ```
-
+    
 The server will be running on `http://localhost:3000`.
 
 ### Data Structures
