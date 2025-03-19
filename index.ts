@@ -73,7 +73,14 @@ const isLoggedIn = (req: Request, res: Response, next: Function) => {
 };
 
 
-let equipments: Equipment[] = []
+let equipments: Equipment[] = [ {
+    id: 123,
+    status: 'available' ,
+    category: 'laptop',
+    name: 'Macbook Pro',
+    imgUri: 'https://www.espir.co.il/images/itempics/MVVK2HB-A_06122023150441_large.jpg'
+}];
+
 let users: User[] = [
     { id: 1, username: 'admin', password: '1234567', isAdmin: true}]
 
